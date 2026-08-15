@@ -49,6 +49,14 @@
   --tabbar-h: 64px;
   --container: 1160px;
   --tap: 48px; /* área mínima táctil */
+
+  /* Movimiento: curvas suaves, nunca rebotes bruscos. Toda la interfaz usa
+     estas tres para que las transiciones se sientan de la misma familia. */
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.45, 0, 0.25, 1);
+  --dur-fast: 0.18s;
+  --dur: 0.32s;
+  --dur-slow: 0.6s;
 }
 
 *,
@@ -57,8 +65,29 @@
   box-sizing: border-box;
 }
 
+/*
+  Fondo: papel cálido con un rastro de huellas casi imperceptible.
+
+  Se pinta en tres capas separadas a propósito:
+    1. `html` lleva el color base. Es lo que se ve si algo más falla.
+    2. `body::after` da la calidez (dos lavados de color muy suaves) y
+       `body::before` imprime las huellas. Van separadas porque cada una
+       necesita su propia opacidad: mezcladas en una sola capa, atenuar las
+       huellas apagaría también el color.
+    3. El contenido va encima, sobre tarjetas blancas opacas: la textura solo
+       asoma por los márgenes y nunca compite con el texto.
+
+  Ambas capas son `position: fixed`, así que no se desplazan con el scroll y se
+  leen como el papel sobre el que está impresa la página, no como un estampado
+  pegado al contenido.
+
+  La opacidad de las huellas es del 3,5%. Debe quedarse ahí: si se nota a
+  primera vista deja de ser una firma y se vuelve un patrón de fondo cualquiera.
+*/
+
 html {
   -webkit-text-size-adjust: 100%;
+  background-color: var(--bg);
 }
 
 body {
@@ -67,8 +96,34 @@ body {
   font-size: 16px;
   line-height: 1.55;
   color: var(--text);
-  background: var(--bg);
+  background: transparent;
   -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'190'%20height%3D'190'%20viewBox%3D'0%200%20190%20190'%3E%3Cg%20fill%3D'%23134e48'%3E%3Cg%20transform%3D'translate(34%2040)%20rotate(-18)%20scale(1.0)'%3E%3Cellipse%20cx%3D'0'%20cy%3D'13'%20rx%3D'11.5'%20ry%3D'9'%2F%3E%3Cellipse%20cx%3D'-11.2'%20cy%3D'-1.5'%20rx%3D'4.3'%20ry%3D'5.9'%20transform%3D'rotate(-22%20-11.2%20-1.5)'%2F%3E%3Cellipse%20cx%3D'-3.8'%20cy%3D'-7.6'%20rx%3D'4.1'%20ry%3D'5.9'%20transform%3D'rotate(-7%20-3.8%20-7.6)'%2F%3E%3Cellipse%20cx%3D'4.5'%20cy%3D'-7'%20rx%3D'4.1'%20ry%3D'5.7'%20transform%3D'rotate(11%204.5%20-7)'%2F%3E%3Cellipse%20cx%3D'11.6'%20cy%3D'0.2'%20rx%3D'4'%20ry%3D'5.4'%20transform%3D'rotate(27%2011.6%200.2)'%2F%3E%3C%2Fg%3E%3Cg%20transform%3D'translate(128%2096)%20rotate(26)%20scale(0.82)'%3E%3Cellipse%20cx%3D'0'%20cy%3D'13'%20rx%3D'11.5'%20ry%3D'9'%2F%3E%3Cellipse%20cx%3D'-11.2'%20cy%3D'-1.5'%20rx%3D'4.3'%20ry%3D'5.9'%20transform%3D'rotate(-22%20-11.2%20-1.5)'%2F%3E%3Cellipse%20cx%3D'-3.8'%20cy%3D'-7.6'%20rx%3D'4.1'%20ry%3D'5.9'%20transform%3D'rotate(-7%20-3.8%20-7.6)'%2F%3E%3Cellipse%20cx%3D'4.5'%20cy%3D'-7'%20rx%3D'4.1'%20ry%3D'5.7'%20transform%3D'rotate(11%204.5%20-7)'%2F%3E%3Cellipse%20cx%3D'11.6'%20cy%3D'0.2'%20rx%3D'4'%20ry%3D'5.4'%20transform%3D'rotate(27%2011.6%200.2)'%2F%3E%3C%2Fg%3E%3Cg%20transform%3D'translate(74%20148)%20rotate(-7)%20scale(0.7)'%3E%3Cellipse%20cx%3D'0'%20cy%3D'13'%20rx%3D'11.5'%20ry%3D'9'%2F%3E%3Cellipse%20cx%3D'-11.2'%20cy%3D'-1.5'%20rx%3D'4.3'%20ry%3D'5.9'%20transform%3D'rotate(-22%20-11.2%20-1.5)'%2F%3E%3Cellipse%20cx%3D'-3.8'%20cy%3D'-7.6'%20rx%3D'4.1'%20ry%3D'5.9'%20transform%3D'rotate(-7%20-3.8%20-7.6)'%2F%3E%3Cellipse%20cx%3D'4.5'%20cy%3D'-7'%20rx%3D'4.1'%20ry%3D'5.7'%20transform%3D'rotate(11%204.5%20-7)'%2F%3E%3Cellipse%20cx%3D'11.6'%20cy%3D'0.2'%20rx%3D'4'%20ry%3D'5.4'%20transform%3D'rotate(27%2011.6%200.2)'%2F%3E%3C%2Fg%3E%3Cg%20transform%3D'translate(160%2022)%20rotate(12)%20scale(0.6)'%3E%3Cellipse%20cx%3D'0'%20cy%3D'13'%20rx%3D'11.5'%20ry%3D'9'%2F%3E%3Cellipse%20cx%3D'-11.2'%20cy%3D'-1.5'%20rx%3D'4.3'%20ry%3D'5.9'%20transform%3D'rotate(-22%20-11.2%20-1.5)'%2F%3E%3Cellipse%20cx%3D'-3.8'%20cy%3D'-7.6'%20rx%3D'4.1'%20ry%3D'5.9'%20transform%3D'rotate(-7%20-3.8%20-7.6)'%2F%3E%3Cellipse%20cx%3D'4.5'%20cy%3D'-7'%20rx%3D'4.1'%20ry%3D'5.7'%20transform%3D'rotate(11%204.5%20-7)'%2F%3E%3Cellipse%20cx%3D'11.6'%20cy%3D'0.2'%20rx%3D'4'%20ry%3D'5.4'%20transform%3D'rotate(27%2011.6%200.2)'%2F%3E%3C%2Fg%3E%3Cg%20transform%3D'translate(8%20116)%20rotate(38)%20scale(0.66)'%3E%3Cellipse%20cx%3D'0'%20cy%3D'13'%20rx%3D'11.5'%20ry%3D'9'%2F%3E%3Cellipse%20cx%3D'-11.2'%20cy%3D'-1.5'%20rx%3D'4.3'%20ry%3D'5.9'%20transform%3D'rotate(-22%20-11.2%20-1.5)'%2F%3E%3Cellipse%20cx%3D'-3.8'%20cy%3D'-7.6'%20rx%3D'4.1'%20ry%3D'5.9'%20transform%3D'rotate(-7%20-3.8%20-7.6)'%2F%3E%3Cellipse%20cx%3D'4.5'%20cy%3D'-7'%20rx%3D'4.1'%20ry%3D'5.7'%20transform%3D'rotate(11%204.5%20-7)'%2F%3E%3Cellipse%20cx%3D'11.6'%20cy%3D'0.2'%20rx%3D'4'%20ry%3D'5.4'%20transform%3D'rotate(27%2011.6%200.2)'%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+  background-size: 190px 190px;
+  background-repeat: repeat;
+  opacity: 0.035;
+}
+
+/* Calidez: teal arriba a la izquierda, durazno a la derecha. Ya vienen con la
+   opacidad incorporada en el rgba(), así que esta capa no lleva `opacity`. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(1100px 520px at 8% -8%, rgba(15, 118, 110, 0.06), transparent 65%),
+    radial-gradient(900px 460px at 100% 4%, rgba(244, 162, 97, 0.10), transparent 62%);
 }
 
 h1,
@@ -165,13 +220,18 @@ button { font: inherit; }
   font-weight: 600;
   font-size: 1rem;
   cursor: pointer;
-  transition: transform 0.08s ease, background 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    background var(--dur) var(--ease-out),
+    border-color var(--dur) var(--ease-out),
+    box-shadow var(--dur) var(--ease-out);
   text-decoration: none;
   text-align: center;
 }
 
 .btn:hover { text-decoration: none; }
-.btn:active { transform: scale(0.985); }
+.btn:hover:not(:disabled) { transform: translateY(-1px); }
+.btn:active:not(:disabled) { transform: translateY(0) scale(0.985); }
 
 .btn:disabled,
 .btn[aria-disabled='true'] {
@@ -237,6 +297,9 @@ button { font: inherit; }
   border-radius: var(--radius-lg);
   padding: 18px;
   box-shadow: var(--shadow-sm);
+  transition:
+    box-shadow var(--dur) var(--ease-out),
+    border-color var(--dur) var(--ease-out);
 }
 
 /* --------------------------------------------------------------- badges */
@@ -348,10 +411,18 @@ button { font: inherit; }
   text-align: left;
   cursor: pointer;
   font-weight: 600;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition:
+    border-color var(--dur) var(--ease-out),
+    background var(--dur) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur) var(--ease-out);
 }
 
-.option:hover { border-color: var(--border-strong); }
+.option:hover {
+  border-color: var(--brand);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
 
 .option.is-selected {
   border-color: var(--brand);
@@ -374,7 +445,15 @@ button { font: inherit; }
   font-weight: 600;
   font-size: 0.92rem;
   cursor: pointer;
+  transition:
+    background var(--dur) var(--ease-out),
+    border-color var(--dur) var(--ease-out),
+    color var(--dur) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
+
+.chip:hover:not(.is-selected) { border-color: var(--brand); background: var(--brand-light); }
+.chip:active { transform: scale(0.97); }
 
 .chip.is-selected {
   background: var(--brand);
@@ -456,6 +535,68 @@ button { font: inherit; }
   display: grid;
   grid-template-columns: 1fr;
   gap: 14px;
+  /* Todas las filas miden lo mismo: sin esto, una tarjeta con el nombre más
+     largo o sin barrio hace que su fila quede de otra altura. */
+  grid-auto-rows: 1fr;
+  align-items: stretch;
+}
+
+/* ------------------------------------------------------------- movimiento */
+
+/*
+  Aparición al hacer scroll. La directiva `v-reveal` añade `is-hidden` al montar
+  y la quita cuando el elemento entra en pantalla. El estado base es VISIBLE a
+  propósito: si el JavaScript falla o el navegador no soporta IntersectionObserver,
+  el contenido se ve igual en lugar de quedar en blanco.
+*/
+.reveal {
+  transition:
+    opacity var(--dur-slow) var(--ease-out),
+    transform var(--dur-slow) var(--ease-out);
+  transition-delay: var(--reveal-delay, 0s);
+}
+
+.reveal.is-hidden {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.reveal-left.is-hidden { transform: translateX(-24px); }
+.reveal-right.is-hidden { transform: translateX(24px); }
+.reveal-zoom.is-hidden { transform: scale(0.96); }
+
+/* Entrada de cada vista al cambiar de ruta. Es una animación (no una
+   transición) para que se dispare sola al montar el nodo. */
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.route-view {
+  animation: page-in var(--dur) var(--ease-out) both;
+}
+
+/* Entrada escalonada de listas: cada elemento arranca un poco después. */
+@keyframes item-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.stagger > * {
+  animation: item-in var(--dur-slow) var(--ease-out) both;
+  animation-delay: calc(var(--stagger-step, 60ms) * var(--i, 0));
 }
 
 /* ------------------------------------------------------------------ modal */
@@ -580,5 +721,14 @@ table.data tr:last-child td { border-bottom: none; }
   *::after {
     animation-duration: 0.001ms !important;
     transition-duration: 0.001ms !important;
+    animation-delay: 0ms !important;
+    transition-delay: 0ms !important;
+  }
+
+  /* Red de seguridad: sin animación, nada puede quedarse oculto o desplazado. */
+  .reveal,
+  .reveal.is-hidden {
+    opacity: 1 !important;
+    transform: none !important;
   }
 }

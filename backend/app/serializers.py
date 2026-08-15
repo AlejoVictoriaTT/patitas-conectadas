@@ -8,7 +8,15 @@ from __future__ import annotations
 
 from .config import settings
 from .models import Post
-from .utils import species_label, status_label, type_label, whatsapp_link
+from .utils import (
+    pet_gender,
+    pet_noun,
+    post_title,
+    species_label,
+    status_label,
+    type_label,
+    whatsapp_link,
+)
 
 WHATSAPP_TEMPLATE = (
     "Hola, vi la publicación de {mascota} en {plataforma} y quisiera obtener más información."
@@ -25,8 +33,9 @@ def post_url(post: Post) -> str:
 
 def _pet_reference(post: Post) -> str:
     if post.pet_name:
-        return f"{post.pet_name} ({species_label(post.species).lower()})"
-    return f"un {species_label(post.species).lower()} en {post.city}"
+        return f"{post.pet_name} ({pet_noun(post.species, post.sex).lower()})"
+    articulo = "una" if pet_gender(post.species, post.sex) == "f" else "un"
+    return f"{articulo} {pet_noun(post.species, post.sex).lower()} en {post.city}"
 
 
 def build_whatsapp_link(post: Post) -> str | None:
@@ -45,17 +54,23 @@ def photo_to_dict(photo) -> dict:
 
 def post_to_card(post: Post) -> dict:
     primary = post.primary_photo
+    # Las etiquetas concuerdan con la mascota, así que se calculan aquí una sola
+    # vez y el frontend las muestra tal cual (evita «Perro perdida»).
+    gender = pet_gender(post.species, post.sex)
     return {
         "id": post.id,
         "public_id": post.public_id,
         "slug": post.slug,
         "url": post_path(post),
+        "title": post_title(post),
+        "gender": gender,
         "type": post.type,
-        "type_label": type_label(post.type),
+        "type_label": type_label(post.type, gender),
         "status": post.status,
-        "status_label": status_label(post.status),
+        "status_label": status_label(post.status, gender),
         "species": post.species,
         "species_label": species_label(post.species),
+        "sex": post.sex,
         "pet_name": post.pet_name,
         "city": post.city,
         "region": post.region,
@@ -72,7 +87,6 @@ def post_to_detail(post: Post, *, is_owner: bool = False, manage_token: str | No
     data.update(
         {
             "breed": post.breed,
-            "sex": post.sex,
             "age": post.age,
             "color": post.color,
             "size": post.size,

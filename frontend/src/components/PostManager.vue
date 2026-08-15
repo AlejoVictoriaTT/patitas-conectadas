@@ -7,7 +7,7 @@ import ShareButtons from '@/components/ShareButtons.vue'
 import { compressImage } from '@/lib/image'
 import { api } from '@/api/client'
 import { useUiStore } from '@/stores/ui'
-import { typeMeta } from '@/lib/format'
+import { postTitle, typeMeta } from '@/lib/format'
 
 const props = defineProps({
   post: { type: Object, required: true },
@@ -226,7 +226,7 @@ async function removePost() {
       <div class="summary-main">
         <img v-if="post.photo_url" :src="post.photo_url" alt="Foto principal" />
         <div>
-          <h2>{{ post.pet_name || post.species_label }}</h2>
+          <h2>{{ postTitle(post) }}</h2>
           <div class="row-tight">
             <StatusBadge :post="post" variant="type" />
             <StatusBadge :post="post" />
@@ -414,7 +414,7 @@ async function removePost() {
       <h2>📤 Compartir</h2>
       <ShareButtons
         :url="shareUrl"
-        :title="`${meta.emoji} ${post.pet_name || post.species_label} — ${post.type_label} en ${post.city}`"
+        :title="`${meta.emoji} ${postTitle(post)} — ${post.type_label} en ${post.city}`"
       />
     </section>
 

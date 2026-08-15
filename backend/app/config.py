@@ -77,7 +77,10 @@ class Settings:
 
         # Almacenamiento de fotos (Vercel Blob)
         self.blob_token: str = _env("BLOB_READ_WRITE_TOKEN")
-        self.upload_dir: Path = ROOT_DIR / "backend" / "uploads"
+        # En serverless el disco es de solo lectura salvo /tmp (efímero entre invocaciones).
+        self.upload_dir: Path = (
+            Path("/tmp/patitas-uploads") if self.is_serverless else ROOT_DIR / "backend" / "uploads"
+        )
         self.max_photos: int = int(_env("MAX_PHOTOS", default="5"))
         self.max_upload_bytes: int = int(_env("MAX_UPLOAD_BYTES", default=str(6 * 1024 * 1024)))
 

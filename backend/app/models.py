@@ -1,6 +1,7 @@
 """Modelos de datos.
 
-Entidades: Usuario, Publicación (mascota), Fotografía, Reporte y Noticia/Recurso.
+Entidades: Usuario, Publicación (mascota), Fotografía, Reporte, Noticia/Recurso
+y el contador diario de visitas.
 Se mantiene una separación clara entre ellas para poder crecer sin romper la V1.
 """
 
@@ -242,6 +243,69 @@ class Article(Base):
     published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
 
+    @property
+    def category_label(self) -> str:
+        return ARTICLE_CATEGORY_LABELS.get(self.category, (self.category or "").replace("_", " "))
+
+
+class NewsItem(Base):
+    """Noticia de un medio externo, traída automáticamente por RSS.
+
+    Se guarda deliberadamente en su propia tabla y no en `Article`: los
+    artículos son contenido propio y curado, y esto es material de terceros
+    del que solo conservamos titular, resumen corto y enlace a la fuente.
+    Mezclarlos obligaría además a migrar la tabla existente en producción.
+
+    Nunca se almacena el texto completo de la nota: eso le pertenece al medio.
+    """
+
+    __tablename__ = "news_items"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    # Identificador de la nota en su feed (guid o enlace): evita duplicados.
+    external_id: Mapped[str] = mapped_column(String(400), unique=True, index=True, nullable=False)
+    title: Mapped[str] = mapped_column(String(300), nullable=False)
+    summary: Mapped[str | None] = mapped_column(String(600), nullable=True)
+    url: Mapped[str] = mapped_column(String(600), nullable=False)
+    image_url: Mapped[str | None] = mapped_column(String(600), nullable=True)
+    source: Mapped[str] = mapped_column(String(80), nullable=False)
+    # tragedia | esperanza | ayuda — permite equilibrar lo que se muestra.
+    tone: Mapped[str] = mapped_column(String(20), default="tragedia", index=True, nullable=False)
+    # Habla de mascotas o animales: se prioriza por ser el tema de la plataforma.
+    is_pet_related: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    # Ciudades detectadas en el titular, separadas por coma.
+    cities: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False, index=True)
+    is_published: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
+NEWS_TONES = ("esperanza", "ayuda", "tragedia")
+
+NEWS_TONE_LABELS = {
+    "esperanza": "Esperanza",
+    "ayuda": "Cómo ayudar",
+    "tragedia": "Emergencia",
+}
+
+
+class SiteVisit(Base):
+    """Contador diario de visitas al sitio.
+
+    No guarda nada de la persona: solo cuántas páginas se vieron ese día y
+    cuántas sesiones distintas las abrieron. Es un agregado por fecha, así que
+    la tabla crece una fila por día, no una por visita.
+
+    `views` cuenta cada cambio de pantalla; `sessions` cuenta la primera visita
+    de cada pestaña del navegador, que es la aproximación a «personas».
+    """
+
+    __tablename__ = "site_visits"
+
+    day: Mapped[date] = mapped_column(Date, primary_key=True)
+    views: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    sessions: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
 
 ARTICLE_CATEGORIES = (
     "noticia",
@@ -254,3 +318,17 @@ ARTICLE_CATEGORIES = (
     "consejo",
     "bienestar_animal",
 )
+
+# Los valores guardados no llevan tilde porque son identificadores; el texto que
+# se muestra sí, y sale siempre de aquí.
+ARTICLE_CATEGORY_LABELS = {
+    "noticia": "Noticia",
+    "albergue": "Albergue",
+    "hogar_de_paso": "Hogar de paso",
+    "fundacion": "Fundación",
+    "jornada_adopcion": "Jornada de adopción",
+    "esterilizacion": "Esterilización",
+    "vacunacion": "Vacunación",
+    "consejo": "Consejo",
+    "bienestar_animal": "Bienestar animal",
+}

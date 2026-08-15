@@ -9,13 +9,16 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import and_, func, or_, select, true
 from sqlalchemy.orm import Session, selectinload
 
+from .. import news_feed
 from ..db import get_db
 from ..models import (
+    NEWS_TONE_LABELS,
     RESOLVED_STATUSES,
     TYPE_ADOPTION,
     TYPE_FOUND,
     TYPE_LOST,
     Article,
+    NewsItem,
     Post,
     Report,
     User,
@@ -32,8 +35,9 @@ from ..schemas import (
     UserOut,
 )
 from ..security import get_current_admin
-from ..serializers import post_to_card
-from ..utils import generate_public_id, slugify
+from ..serializers import post_path, post_to_card
+from ..utils import generate_public_id, post_title, slugify
+from .visits import resumen_visitas
 
 router = APIRouter(prefix="/api/admin", tags=["administración"], dependencies=[Depends(get_current_admin)])
 
@@ -54,6 +58,11 @@ def stats(db: Session = Depends(get_db)) -> AdminStatsOut:
         .limit(8)
     ).all()
 
+    # Publicaciones más vistas: sirve para saber qué está atrayendo tráfico.
+    mas_vistas = db.scalars(
+        select(Post).where(Post.views > 0).order_by(Post.views.desc()).limit(8)
+    ).all()
+
     return AdminStatsOut(
         total_posts=count_posts(),
         active_posts=count_posts(Post.is_active.is_(True), Post.status.notin_(RESOLVED_STATUSES)),
@@ -67,6 +76,18 @@ def stats(db: Session = Depends(get_db)) -> AdminStatsOut:
         users=db.scalar(select(func.count()).select_from(User)) or 0,
         posts_last_7_days=count_posts(Post.created_at >= week_ago),
         top_cities=[{"city": row.city, "total": row.total} for row in top_cities],
+        visits=resumen_visitas(db),
+        total_post_views=int(db.scalar(select(func.coalesce(func.sum(Post.views), 0))) or 0),
+        most_viewed=[
+            {
+                "id": p.id,
+                "title": post_title(p),
+                "city": p.city,
+                "url": post_path(p),
+                "views": p.views,
+            }
+            for p in mas_vistas
+        ],
     )
 
 
@@ -258,6 +279,47 @@ def admin_update_user(
 
 
 # -------------------------------------------------------------- noticias/recursos
+
+
+# ------------------------------------------------------------------ actualidad
+
+
+@router.post("/news/sync")
+async def admin_sync_news(db: Session = Depends(get_db)) -> dict:
+    """Dispara la ingesta a mano, sin esperar al cron diario."""
+    return {"ok": True, **await news_feed.sincronizar(db)}
+
+
+@router.get("/news")
+def admin_list_news(db: Session = Depends(get_db), limit: int = Query(default=40, ge=1, le=100)) -> list[dict]:
+    filas = db.scalars(
+        select(NewsItem).order_by(NewsItem.published_at.desc()).limit(limit)
+    ).all()
+    return [
+        {
+            "id": n.id,
+            "title": n.title,
+            "source": n.source,
+            "tone": n.tone,
+            "tone_label": NEWS_TONE_LABELS.get(n.tone, n.tone),
+            "url": n.url,
+            "cities": n.cities,
+            "is_pet_related": n.is_pet_related,
+            "is_published": n.is_published,
+            "published_at": n.published_at,
+        }
+        for n in filas
+    ]
+
+
+@router.post("/news/{item_id}/visibility")
+def admin_news_visibility(item_id: str, payload: AdminPostFlagIn, db: Session = Depends(get_db)) -> dict:
+    item = db.get(NewsItem, item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Noticia no encontrada.")
+    item.is_published = payload.is_active
+    db.commit()
+    return {"ok": True, "is_published": item.is_published}
 
 
 @router.get("/articles", response_model=list[ArticleOut])

@@ -1,10 +1,10 @@
 <script setup>
-import { onMounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import { api } from '@/api/client'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
-import { formatShortDate } from '@/lib/format'
+import { categoryLabel, formatShortDate, postTitle } from '@/lib/format'
 import { setPageTitle } from '@/lib/head'
 
 const auth = useAuthStore()
@@ -46,6 +46,44 @@ const CATEGORIAS = [
   'noticia', 'albergue', 'hogar_de_paso', 'fundacion', 'jornada_adopcion',
   'esterilizacion', 'vacunacion', 'consejo', 'bienestar_animal',
 ]
+
+// ------------------------------------------------- ingesta de noticias
+
+const syncing = ref(false)
+const syncResult = ref(null)
+
+async function syncNews() {
+  syncing.value = true
+  try {
+    syncResult.value = await api.admin.syncNews()
+    ui.success(`Listo: ${syncResult.value.nuevas} noticias nuevas.`)
+  } catch (error) {
+    ui.error(error.message)
+  } finally {
+    syncing.value = false
+  }
+}
+
+// ------------------------------------------------------------------ visitas
+
+const formatNumber = (valor) => new Intl.NumberFormat('es-CO').format(valor || 0)
+
+const DIAS = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb']
+
+function diaCorto(iso) {
+  const fecha = new Date(`${iso}T12:00:00`)
+  return `${DIAS[fecha.getDay()]} ${fecha.getDate()}`
+}
+
+// La barra más alta del periodo marca el 100%; con 0 visitas no se divide.
+const maxVisitasDia = computed(() =>
+  Math.max(1, ...(stats.value?.visits?.daily || []).map((d) => d.views)),
+)
+
+function porcentaje(valor, maximo) {
+  if (!valor) return 0
+  return Math.max(4, Math.round((valor / maximo) * 100)) // mínimo visible
+}
 
 const MOTIVOS = {
   informacion_falsa: 'Información falsa',
@@ -190,6 +228,72 @@ onMounted(() => {
 
     <!-- ================================= RESUMEN ================================= -->
     <section v-if="tab === 'resumen'">
+      <!-- Visibilidad: ¿nos está viendo alguien? -->
+      <div v-if="stats?.visits" class="visits-block">
+        <h2 class="block-title">👁️ Visibilidad del sitio</h2>
+
+        <p v-if="stats.visits.unavailable" class="alert alert-warm">
+          El contador de visitas aún no está activo en esta base de datos. Se activa solo
+          en el próximo arranque del servidor con <code>AUTO_CREATE_TABLES=1</code>.
+        </p>
+        <div class="stat-grid">
+          <div class="panel stat is-highlight">
+            <span>Visitas totales</span>
+            <strong>{{ formatNumber(stats.visits.total) }}</strong>
+            <small class="text-muted">Desde que se activó el contador</small>
+          </div>
+          <div class="panel stat">
+            <span>Hoy</span>
+            <strong>{{ formatNumber(stats.visits.today) }}</strong>
+          </div>
+          <div class="panel stat">
+            <span>Últimos 7 días</span>
+            <strong>{{ formatNumber(stats.visits.last_7_days) }}</strong>
+          </div>
+          <div class="panel stat">
+            <span>Últimos 30 días</span>
+            <strong>{{ formatNumber(stats.visits.last_30_days) }}</strong>
+          </div>
+          <div class="panel stat">
+            <span>Visitantes (sesiones)</span>
+            <strong>{{ formatNumber(stats.visits.sessions_total) }}</strong>
+            <small class="text-muted">7 días: {{ formatNumber(stats.visits.sessions_last_7_days) }}</small>
+          </div>
+          <div class="panel stat">
+            <span>Aperturas de publicaciones</span>
+            <strong>{{ formatNumber(stats.total_post_views) }}</strong>
+          </div>
+        </div>
+
+        <!-- Barras de los últimos 7 días -->
+        <div v-if="stats.visits.daily?.length" class="panel chart">
+          <h3>Visitas por día</h3>
+          <ul class="bars">
+            <li v-for="dia in stats.visits.daily" :key="dia.day">
+              <span class="bar-label">{{ diaCorto(dia.day) }}</span>
+              <span class="bar-track">
+                <span
+                  class="bar-fill"
+                  :style="{ width: `${porcentaje(dia.views, maxVisitasDia)}%` }"
+                ></span>
+              </span>
+              <strong class="bar-value">{{ formatNumber(dia.views) }}</strong>
+            </li>
+          </ul>
+        </div>
+
+        <div v-if="stats.most_viewed?.length" class="panel cities">
+          <h2>Publicaciones más vistas</h2>
+          <ul>
+            <li v-for="row in stats.most_viewed" :key="row.id">
+              <router-link :to="row.url">{{ row.title }}</router-link>
+              <strong>👁️ {{ formatNumber(row.views) }}</strong>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <h2 class="block-title">📊 Publicaciones</h2>
       <div v-if="stats" class="stat-grid">
         <div class="panel stat"><span>Publicaciones</span><strong>{{ stats.total_posts }}</strong></div>
         <div class="panel stat"><span>Activas</span><strong>{{ stats.active_posts }}</strong></div>
@@ -252,6 +356,7 @@ onMounted(() => {
               <th>Tipo / estado</th>
               <th>Ciudad</th>
               <th>Fecha</th>
+              <th>Visitas</th>
               <th>Reportes</th>
               <th>Acciones</th>
             </tr>
@@ -259,7 +364,7 @@ onMounted(() => {
           <tbody>
             <tr v-for="post in posts.items" :key="post.id">
               <td>
-                <router-link :to="post.url">{{ post.pet_name || post.species_label }}</router-link>
+                <router-link :to="post.url">{{ postTitle(post) }}</router-link>
                 <br />
                 <small class="text-muted">{{ post.public_id }}</small>
               </td>
@@ -270,6 +375,7 @@ onMounted(() => {
               </td>
               <td>{{ post.city }}</td>
               <td>{{ formatShortDate(post.created_at) }}</td>
+              <td class="nowrap">👁️ {{ formatNumber(post.views || 0) }}</td>
               <td>{{ post.reports_count || 0 }}</td>
               <td>
                 <button class="btn btn-ghost btn-sm" type="button" @click="toggleVisibility(post)">
@@ -382,6 +488,28 @@ onMounted(() => {
         <button class="btn btn-primary btn-sm" type="button" @click="editArticle(null)">+ Nuevo contenido</button>
       </div>
 
+      <!-- Actualidad: ingesta de noticias externas -->
+      <div class="panel news-sync">
+        <h3>Noticias de medios</h3>
+        <p class="text-soft small">
+          Se traen solas una vez al día. Este botón fuerza la sincronización ahora mismo, útil
+          después de un cambio o si quieres ver el resultado sin esperar.
+        </p>
+        <div class="row">
+          <button class="btn btn-primary btn-sm" type="button" :disabled="syncing" @click="syncNews">
+            {{ syncing ? 'Sincronizando…' : 'Sincronizar ahora' }}
+          </button>
+          <span v-if="syncResult" class="text-soft small">
+            {{ syncResult.nuevas }} nuevas · {{ syncResult.revisadas }} revisadas ·
+            {{ syncResult.purgadas }} retiradas por antigüedad ·
+            {{ syncResult.fuentes_ok }} fuentes leídas
+            <template v-if="syncResult.fuentes_fallidas?.length">
+              · fallaron: {{ syncResult.fuentes_fallidas.join(', ') }}
+            </template>
+          </span>
+        </div>
+      </div>
+
       <form v-if="editingArticle" class="panel" @submit.prevent="saveArticle">
         <h3>{{ editingArticle === 'nuevo' ? 'Nuevo contenido' : 'Editar contenido' }}</h3>
         <div class="form-grid cols-2">
@@ -392,7 +520,7 @@ onMounted(() => {
           <div class="field">
             <label class="label" for="ar-cat">Categoría</label>
             <select id="ar-cat" v-model="articleForm.category" class="select">
-              <option v-for="c in CATEGORIAS" :key="c" :value="c">{{ c.replace(/_/g, ' ') }}</option>
+              <option v-for="c in CATEGORIAS" :key="c" :value="c">{{ categoryLabel(c) }}</option>
             </select>
           </div>
           <div class="field">
@@ -436,7 +564,7 @@ onMounted(() => {
           <tbody>
             <tr v-for="article in articles" :key="article.id">
               <td>{{ article.title }}</td>
-              <td>{{ article.category.replace(/_/g, ' ') }}</td>
+              <td>{{ categoryLabel(article) }}</td>
               <td>{{ article.city || 'Nacional' }}</td>
               <td>
                 <span class="badge" :class="article.is_published ? 'badge-encontrada' : 'badge-cerrada'">
@@ -472,6 +600,62 @@ onMounted(() => {
 .stat { display: grid; gap: 2px; padding: 14px; }
 .stat span { color: var(--text-soft); font-size: 0.85rem; }
 .stat strong { font-size: 1.6rem; }
+.stat small { font-size: 0.78rem; }
+
+/* --------------------------------------------------------------- visitas */
+
+.news-sync { margin-bottom: 16px; }
+.news-sync h3 { margin-top: 0; font-size: 1.02rem; }
+.news-sync p { margin: 0 0 10px; max-width: 62ch; }
+
+.block-title {
+  font-size: 1.05rem;
+  margin: 22px 0 10px;
+}
+.block-title:first-child { margin-top: 0; }
+
+.visits-block { margin-bottom: 8px; }
+
+.stat.is-highlight {
+  border-color: var(--brand);
+  background: linear-gradient(160deg, var(--brand-light), var(--surface) 70%);
+}
+.stat.is-highlight strong { color: var(--brand-dark); }
+
+.chart { margin-top: 14px; }
+.chart h3 { margin-top: 0; font-size: 1rem; }
+
+.bars { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+
+.bars li {
+  display: grid;
+  grid-template-columns: 62px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.88rem;
+}
+
+.bar-label { color: var(--text-soft); }
+
+.bar-track {
+  height: 10px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--brand), var(--accent));
+  /* Crece con la misma curva que el resto de la interfaz. */
+  transition: width var(--dur-slow) var(--ease-out);
+}
+
+.bar-value { font-variant-numeric: tabular-nums; }
+
+.cities li a { color: var(--text); }
 
 .cities ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .cities li { display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border); padding-bottom: 6px; }

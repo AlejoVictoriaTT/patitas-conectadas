@@ -35,11 +35,11 @@ onMounted(async () => {
       title="No encontramos este contenido"
       message="Puede que haya sido retirado o que el enlace esté incompleto."
     >
-      <router-link class="btn btn-primary" to="/noticias">Ver noticias y ayuda</router-link>
+      <router-link class="btn btn-primary" to="/guias">Ver guías y ayuda</router-link>
     </EmptyState>
 
     <article v-else>
-      <router-link class="btn btn-quiet btn-sm back" to="/noticias">← Noticias y ayuda</router-link>
+      <router-link class="btn btn-quiet btn-sm back" to="/guias">← Guías y ayuda</router-link>
       <h1>{{ article.title }}</h1>
       <p class="text-muted">
         {{ formatDate(article.published_at) }}

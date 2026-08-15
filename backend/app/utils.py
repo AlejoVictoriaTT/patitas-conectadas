@@ -11,6 +11,7 @@ import httpx
 
 from .config import settings
 from .models import (
+    ARTICLE_CATEGORY_LABELS,
     STATUS_ADOPTION_ACTIVE,
     STATUS_ADOPTION_DONE,
     STATUS_CLOSED,
@@ -64,9 +65,20 @@ def whatsapp_link(phone: str | None, message: str = "") -> str | None:
 
 # --------------------------------------------------------------- etiquetas UI
 
+# Las etiquetas concuerdan en género con la mascota: un perro está «perdido» y
+# una gata está «perdida». Las tablas en femenino son las genéricas (las que ven
+# los formularios, donde todavía no hay una mascota concreta) y las `_M` son la
+# variante masculina que se usa cuando la publicación sí tiene sexo y especie.
+
 TYPE_LABELS = {
     TYPE_LOST: "Perdida",
     TYPE_FOUND: "Encontrada",
+    TYPE_ADOPTION: "En adopción",
+}
+
+TYPE_LABELS_M = {
+    TYPE_LOST: "Perdido",
+    TYPE_FOUND: "Encontrado",
     TYPE_ADOPTION: "En adopción",
 }
 
@@ -80,23 +92,78 @@ STATUS_LABELS = {
     STATUS_CLOSED: "Caso cerrado",
 }
 
+STATUS_LABELS_M = {
+    STATUS_LOST_ACTIVE: "Perdido",
+    STATUS_LOST_REUNITED: "Reunido con su familia",
+    STATUS_FOUND_ACTIVE: "Encontrado — buscando a su familia",
+    STATUS_FOUND_DELIVERED: "Entregado a su familia",
+    STATUS_ADOPTION_ACTIVE: "Disponible para adopción",
+    STATUS_ADOPTION_DONE: "Adoptado",
+    STATUS_CLOSED: "Caso cerrado",
+}
+
 SPECIES_LABELS = {
     "perro": "Perro",
     "gato": "Gato",
     "otro": "Otro",
 }
 
+# Sustantivo con el que se nombra a la mascota cuando no tiene nombre propio.
+PET_NOUNS = {
+    ("perro", "macho"): "Perro",
+    ("perro", "hembra"): "Perra",
+    ("gato", "macho"): "Gato",
+    ("gato", "hembra"): "Gata",
+}
 
-def type_label(value: str) -> str:
-    return TYPE_LABELS.get(value, value)
+# Sin especie reconocida se usa «Mascota», que es femenino.
+FALLBACK_NOUN = "Mascota"
 
 
-def status_label(value: str) -> str:
-    return STATUS_LABELS.get(value, value)
+def pet_gender(species: str | None, sex: str | None) -> str:
+    """Devuelve 'm' o 'f': el género del sustantivo que nombra a la mascota.
+
+    Sin sexo registrado se asume el masculino («Perro perdido»), que es la forma
+    no marcada en español. Para especie «otro» siempre es femenino porque el
+    sustantivo pasa a ser «Mascota».
+    """
+    if (species or "").lower() in ("perro", "gato"):
+        return "f" if (sex or "").lower() == "hembra" else "m"
+    return "f"
+
+
+def pet_noun(species: str | None, sex: str | None) -> str:
+    especie = (species or "").lower()
+    if especie in ("perro", "gato"):
+        return PET_NOUNS[(especie, "hembra" if (sex or "").lower() == "hembra" else "macho")]
+    return FALLBACK_NOUN
+
+
+def type_label(value: str, gender: str = "f") -> str:
+    tabla = TYPE_LABELS_M if gender == "m" else TYPE_LABELS
+    return tabla.get(value, value)
+
+
+def status_label(value: str, gender: str = "f") -> str:
+    tabla = STATUS_LABELS_M if gender == "m" else STATUS_LABELS
+    return tabla.get(value, value)
 
 
 def species_label(value: str) -> str:
     return SPECIES_LABELS.get(value, (value or "").capitalize())
+
+
+def post_title(post) -> str:
+    """Título visible: el nombre propio, o «Perra perdida» / «Gato encontrado»."""
+    if post.pet_name:
+        return post.pet_name
+    genero = pet_gender(post.species, post.sex)
+    return f"{pet_noun(post.species, post.sex)} {type_label(post.type, genero).lower()}"
+
+
+def category_label(value: str) -> str:
+    """Etiqueta con tildes de una categoría de «Noticias y ayuda»."""
+    return ARTICLE_CATEGORY_LABELS.get(value, (value or "").replace("_", " ").capitalize())
 
 
 # ------------------------------------------------------------------- antispam

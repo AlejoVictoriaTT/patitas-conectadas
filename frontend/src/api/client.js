@@ -130,10 +130,20 @@ export const api = {
   cities: (country, region) => request(`/api/geo/cities${query({ country, region })}`),
   searchCities: (q, country) => request(`/api/geo/search${query({ q, country, limit: 25 })}`),
 
-  // ---- noticias
+  // ---- métricas
+  // Se envía en segundo plano; si falla no pasa nada y nadie se entera.
+  trackVisit: (payload) =>
+    request('/api/visits', { method: 'POST', body: payload }).catch(() => null),
+
+  // ---- noticias propias (guías y recursos)
   articles: (params) => request(`/api/articles${query(params)}`),
   article: (slug) => request(`/api/articles/${slug}`),
   articleCategories: () => request('/api/articles/categories'),
+
+  // ---- actualidad (notas de medios traídas por RSS)
+  news: (params) => request(`/api/news${query(params)}`),
+  newsTones: () => request('/api/news/tones'),
+  newsRegions: () => request('/api/news/regions'),
 
   // ---- administración
   admin: {
@@ -145,6 +155,10 @@ export const api = {
     updateReport: (id, payload) => request(`/api/admin/reports/${id}`, { method: 'PATCH', body: payload }),
     users: (params) => request(`/api/admin/users${query(params)}`),
     updateUser: (id, payload) => request(`/api/admin/users/${id}`, { method: 'PATCH', body: payload }),
+    news: (params) => request(`/api/admin/news${query(params)}`),
+    syncNews: () => request('/api/admin/news/sync', { method: 'POST' }),
+    setNewsVisibility: (id, payload) =>
+      request(`/api/admin/news/${id}/visibility`, { method: 'POST', body: payload }),
     articles: () => request('/api/admin/articles'),
     createArticle: (payload) => request('/api/admin/articles', { method: 'POST', body: payload }),
     updateArticle: (id, payload) => request(`/api/admin/articles/${id}`, { method: 'PUT', body: payload }),

@@ -19,7 +19,7 @@ from fastapi.staticfiles import StaticFiles
 from .config import settings
 from .db import init_db
 from .models import ALLOWED_STATUSES, ARTICLE_CATEGORIES, POST_TYPES, SPECIES
-from .routers import admin, auth, geo, meta, news, posts, reports, uploads
+from .routers import admin, auth, cron, geo, meta, news, posts, reports, uploads, visits
 from .utils import SPECIES_LABELS, STATUS_LABELS, TYPE_LABELS
 
 logger = logging.getLogger("patitas")
@@ -104,10 +104,14 @@ async def validation_error_handler(_: Request, exc: RequestValidationError) -> J
     )
 
 
-# Fotos guardadas en disco durante el desarrollo (en producción se usa Vercel Blob)
+# Fotos guardadas en disco durante el desarrollo (en producción se usa Vercel Blob).
+# El disco puede ser de solo lectura (serverless): si falla, se sigue sin montar /uploads.
 if not settings.blob_token:
-    settings.upload_dir.mkdir(parents=True, exist_ok=True)
-    app.mount("/uploads", StaticFiles(directory=settings.upload_dir), name="uploads")
+    try:
+        settings.upload_dir.mkdir(parents=True, exist_ok=True)
+        app.mount("/uploads", StaticFiles(directory=settings.upload_dir), name="uploads")
+    except OSError as exc:
+        logger.error("No se pudo preparar la carpeta de subidas (%s): %s", settings.upload_dir, exc)
 
 
 app.include_router(auth.router)
@@ -116,13 +120,23 @@ app.include_router(uploads.router)
 app.include_router(reports.router)
 app.include_router(geo.router)
 app.include_router(news.router)
+app.include_router(news.feed_router)
 app.include_router(admin.router)
+app.include_router(visits.router)
+app.include_router(cron.router)
 app.include_router(meta.router)
 
 
 @app.get("/api/health", tags=["sistema"])
 def health() -> dict:
-    return {"ok": True, "app": settings.app_name, "environment": settings.environment}
+    # `database` no expone credenciales: solo el motor en uso. En serverless, "sqlite"
+    # significa que falta definir DATABASE_URL y ninguna consulta va a funcionar.
+    return {
+        "ok": True,
+        "app": settings.app_name,
+        "environment": settings.environment,
+        "database": "sqlite" if settings.is_sqlite else "postgresql",
+    }
 
 
 @app.get("/api/config", tags=["sistema"])

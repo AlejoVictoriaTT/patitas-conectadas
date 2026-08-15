@@ -45,14 +45,18 @@ watch(() => ui.city?.city, loadRecent)
     <section class="hero">
       <div class="container hero-inner">
         <p class="eyebrow">🐾 Patitas Conectadas</p>
-        <h1>Ayudemos a que vuelvan a casa</h1>
+        <h1>Reencuentros, rescates y nuevos comienzos</h1>
         <p class="lead">
           Publica una mascota perdida, encontrada o en adopción en menos de dos minutos.
           Sin formularios largos y sin necesidad de crear una cuenta.
         </p>
 
-        <div class="actions">
-          <router-link class="action action-perdida" :to="{ path: '/publicar', query: { tipo: 'perdida' } }">
+        <div class="actions stagger">
+          <router-link
+            class="action action-perdida"
+            :style="{ '--i': 0 }"
+            :to="{ path: '/publicar', query: { tipo: 'perdida' } }"
+          >
             <span class="action-emoji" aria-hidden="true">🔴</span>
             <span>
               <strong>Perdí una mascota</strong>
@@ -60,7 +64,11 @@ watch(() => ui.city?.city, loadRecent)
             </span>
           </router-link>
 
-          <router-link class="action action-encontrada" :to="{ path: '/publicar', query: { tipo: 'encontrada' } }">
+          <router-link
+            class="action action-encontrada"
+            :style="{ '--i': 1 }"
+            :to="{ path: '/publicar', query: { tipo: 'encontrada' } }"
+          >
             <span class="action-emoji" aria-hidden="true">🟢</span>
             <span>
               <strong>Encontré una mascota</strong>
@@ -68,7 +76,7 @@ watch(() => ui.city?.city, loadRecent)
             </span>
           </router-link>
 
-          <router-link class="action action-adopcion" to="/adopciones">
+          <router-link class="action action-adopcion" :style="{ '--i': 2 }" to="/adopciones">
             <span class="action-emoji" aria-hidden="true">💙</span>
             <span>
               <strong>Quiero adoptar</strong>
@@ -76,7 +84,7 @@ watch(() => ui.city?.city, loadRecent)
             </span>
           </router-link>
 
-          <router-link class="action action-buscar" to="/buscar">
+          <router-link class="action action-buscar" :style="{ '--i': 3 }" to="/buscar">
             <span class="action-emoji" aria-hidden="true">🔎</span>
             <span>
               <strong>Buscar mascotas</strong>
@@ -94,7 +102,7 @@ watch(() => ui.city?.city, loadRecent)
     <!-- Ciudad + recientes -->
     <section class="section">
       <div class="container">
-        <div class="city-bar panel">
+        <div v-reveal class="city-bar panel">
           <div>
             <h2 class="city-title">📍 Selecciona tu ciudad</h2>
             <p class="text-muted">
@@ -114,8 +122,13 @@ watch(() => ui.city?.city, loadRecent)
           <div v-for="n in 4" :key="n" class="skeleton card-skeleton"></div>
         </div>
 
-        <div v-else-if="posts.length" class="pet-grid">
-          <PetCard v-for="post in posts" :key="post.id" :post="post" />
+        <div v-else-if="posts.length" class="pet-grid stagger">
+          <PetCard
+            v-for="(post, index) in posts"
+            :key="post.id"
+            :post="post"
+            :style="{ '--i': index }"
+          />
         </div>
 
         <EmptyState
@@ -136,16 +149,16 @@ watch(() => ui.city?.city, loadRecent)
     <section class="section help">
       <div class="container">
         <div class="help-grid">
-          <article class="panel">
+          <article v-reveal="{ delay: 0 }" class="panel">
             <h3>¿Perdiste a tu mascota?</h3>
             <p class="text-soft">
               Las primeras horas son decisivas. Publica con una foto clara, comparte el enlace por
               WhatsApp y avisa en tu barrio.
             </p>
-            <router-link class="btn btn-ghost btn-sm" to="/noticias">Ver consejos</router-link>
+            <router-link class="btn btn-ghost btn-sm" to="/guias">Ver la guía</router-link>
           </article>
 
-          <article class="panel">
+          <article v-reveal="{ delay: 90 }" class="panel">
             <h3>¿Encontraste una mascota?</h3>
             <p class="text-soft">
               Revisa si tiene placa o microchip, tómale una foto y publícala indicando el sector
@@ -156,12 +169,16 @@ watch(() => ui.city?.city, loadRecent)
             </router-link>
           </article>
 
-          <article class="panel">
-            <h3>Noticias y ayuda</h3>
+          <article v-reveal="{ delay: 180 }" class="panel">
+            <h3>Emergencia y actualidad</h3>
             <p class="text-soft">
-              Albergues, hogares de paso, fundaciones y jornadas de esterilización y vacunación.
+              Teléfonos de emergencia y enlaces oficiales de gobernaciones y alcaldías, junto con lo
+              que están publicando los medios sobre el terremoto.
             </p>
-            <router-link class="btn btn-ghost btn-sm" to="/noticias">Explorar recursos</router-link>
+            <div class="row-tight">
+              <router-link class="btn btn-ghost btn-sm" to="/emergencia">Teléfonos</router-link>
+              <router-link class="btn btn-quiet btn-sm" to="/noticias">Noticias</router-link>
+            </div>
           </article>
         </div>
       </div>
@@ -171,13 +188,46 @@ watch(() => ui.city?.city, loadRecent)
 
 <style scoped>
 .hero {
+  position: relative;
   background:
     radial-gradient(1200px 320px at 15% -10%, var(--brand-light), transparent 70%),
+    radial-gradient(900px 260px at 92% 0%, var(--accent-soft), transparent 72%),
     linear-gradient(180deg, var(--accent-soft) 0%, var(--bg) 65%);
   padding: 24px 0 8px;
+  overflow: hidden;
 }
 
 .hero-inner { display: grid; gap: 14px; }
+
+/* Entrada en cascada de la portada: cada pieza entra un poco después que la
+   anterior. Es lo primero que ve el usuario, así que marca el tono. */
+@keyframes hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.eyebrow,
+.hero h1,
+.lead,
+.publish-main {
+  animation: hero-in 0.7s var(--ease-out) both;
+}
+
+.eyebrow { animation-delay: 0.02s; }
+.hero h1 { animation-delay: 0.1s; }
+.lead { animation-delay: 0.18s; }
+.publish-main { animation-delay: 0.5s; }
+
+/* Las cuatro tarjetas de acción entran en cascada (clase `stagger`), empezando
+   después del texto de la portada. */
+.actions { --stagger-step: 70ms; }
+.actions > * { animation-delay: calc(0.26s + var(--stagger-step) * var(--i, 0)); }
 
 .eyebrow {
   margin: 0;

@@ -42,6 +42,13 @@ async def upload_image(data: bytes, content_type: str, prefix: str = "mascotas")
 
     if settings.blob_token:
         return await _upload_to_vercel_blob(path, data, content_type)
+    if settings.is_serverless:
+        # El disco de la función es efímero y /uploads no se sirve en producción:
+        # guardar aquí crearía publicaciones con fotos rotas.
+        raise StorageError(
+            "El almacenamiento de fotos no está configurado. "
+            "Crea el Blob store en Vercel y define BLOB_READ_WRITE_TOKEN."
+        )
     return _save_locally(path, data)
 
 

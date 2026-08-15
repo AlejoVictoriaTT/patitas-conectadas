@@ -5,10 +5,20 @@ from __future__ import annotations
 import math
 from datetime import date
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    Header,
+    HTTPException,
+    Query,
+    Request,
+    status,
+)
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
+from .. import notify
 from ..config import settings
 from ..db import get_db
 from ..models import (
@@ -228,6 +238,7 @@ def my_posts(user: User = Depends(get_current_user), db: Session = Depends(get_d
 async def create_post(
     payload: PostCreateIn,
     request: Request,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     user: User | None = Depends(get_current_user_optional),
 ) -> PostCreatedOut:
@@ -291,6 +302,12 @@ async def create_post(
     db.add(post)
     db.commit()
     db.refresh(post)
+
+    # Alerta al administrador. El mensaje se arma aquí, con la sesión abierta, y
+    # el envío se agenda para después de responder: si el proveedor está caído o
+    # tarda, la persona que publicó no se entera ni espera.
+    if notify.esta_activo():
+        background_tasks.add_task(notify.enviar, notify.construir_mensaje(post))
 
     detail = post_to_detail(post, is_owner=True, manage_token=manage_token)
     return PostCreatedOut(
@@ -386,6 +403,7 @@ def update_post(
 def change_status(
     identifier: str,
     payload: StatusUpdateIn,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     user: User | None = Depends(get_current_user_optional),
     x_manage_token: str | None = Header(default=None),
@@ -400,10 +418,19 @@ def change_status(
             detail=f"Estado no válido para este tipo de publicación. Opciones: {', '.join(allowed)}",
         )
 
+    estado_anterior = post.status
     post.status = payload.status
     post.resolved_at = utcnow() if payload.status in RESOLVED_STATUSES else None
     db.commit()
     db.refresh(post)
+
+    # Solo se avisa si el estado cambió de verdad: guardar el mismo valor dos
+    # veces no es una noticia. El mensaje se arma aquí, con la sesión abierta.
+    if estado_anterior != post.status and notify.esta_activo():
+        background_tasks.add_task(
+            notify.enviar, notify.construir_mensaje_estado(post, estado_anterior)
+        )
+
     return PostDetailOut(**post_to_detail(post, is_owner=True, manage_token=x_manage_token))
 
 

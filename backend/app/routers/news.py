@@ -6,28 +6,54 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.orm import Session
 
+from .. import news_feed
 from ..db import get_db
-from ..models import ARTICLE_CATEGORIES, Article
-from ..schemas import ArticleOut
+from ..models import ARTICLE_CATEGORIES, NEWS_TONE_LABELS, NEWS_TONES, Article
+from ..schemas import ArticleOut, NewsListOut
+from ..utils import category_label
 
 router = APIRouter(prefix="/api/articles", tags=["noticias"])
 
-CATEGORY_LABELS = {
-    "noticia": "Noticia",
-    "albergue": "Albergue",
-    "hogar_de_paso": "Hogar de paso",
-    "fundacion": "Fundación",
-    "jornada_adopcion": "Jornada de adopción",
-    "esterilizacion": "Esterilización",
-    "vacunacion": "Vacunación",
-    "consejo": "Consejo",
-    "bienestar_animal": "Bienestar animal",
-}
+# Actualidad: notas de medios externas, en su propio prefijo para no mezclarse
+# con los artículos propios.
+feed_router = APIRouter(prefix="/api/news", tags=["actualidad"])
+
+
+@feed_router.get("/tones")
+def news_tones() -> list[dict]:
+    return [{"value": t, "label": NEWS_TONE_LABELS[t]} for t in NEWS_TONES]
+
+
+@feed_router.get("/regions")
+def news_regions() -> list[dict]:
+    """Solo los departamentos afectados: filtrar por otros no daría resultados."""
+    return [
+        {"value": nombre, "label": nombre, "capital": municipios[1]}
+        for nombre, municipios in news_feed.DEPARTAMENTOS.items()
+    ]
+
+
+@feed_router.get("", response_model=NewsListOut)
+def news_feed_list(
+    db: Session = Depends(get_db),
+    tone: str | None = None,
+    region: str | None = None,
+    only_pets: bool = False,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=12, ge=1, le=24),
+):
+    if tone and tone not in NEWS_TONES:
+        raise HTTPException(status_code=400, detail="Tono no válido.")
+    if region and region not in news_feed.DEPARTAMENTOS:
+        raise HTTPException(status_code=400, detail="Departamento no válido.")
+    return news_feed.listar(
+        db, tone=tone, region=region, only_pets=only_pets, page=page, page_size=page_size
+    )
 
 
 @router.get("/categories")
 def categories() -> list[dict]:
-    return [{"value": c, "label": CATEGORY_LABELS.get(c, c)} for c in ARTICLE_CATEGORIES]
+    return [{"value": c, "label": category_label(c)} for c in ARTICLE_CATEGORIES]
 
 
 @router.get("", response_model=list[ArticleOut])

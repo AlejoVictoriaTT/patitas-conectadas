@@ -52,7 +52,6 @@ const total = ref(0)
 const page = ref(1)
 const pages = ref(1)
 const loading = ref(true)
-const showAdvanced = ref(false)
 
 const title = computed(() =>
   props.fixedType === 'adopcion' ? '💙 Mascotas en adopción' : '🔎 Buscar mascotas',
@@ -209,11 +208,9 @@ onMounted(load)
         </div>
       </div>
 
-      <button class="btn btn-quiet btn-sm advanced-toggle" type="button" @click="showAdvanced = !showAdvanced">
-        {{ showAdvanced ? '− Menos filtros' : '+ Más filtros' }}
-      </button>
-
-      <div v-if="showAdvanced" class="form-grid cols-2 advanced">
+      <!-- Antes estaban plegados tras un botón «+ Más filtros». Se muestran
+           siempre: esconderlos hacía que casi nadie los descubriera. -->
+      <div class="form-grid cols-2 advanced">
         <div class="field">
           <label class="label" for="breed">Raza</label>
           <input id="breed" v-model="filters.breed" class="input" type="text" placeholder="Ej.: criollo" />
@@ -270,8 +267,15 @@ onMounted(load)
       <div v-for="n in 8" :key="n" class="skeleton card-skeleton"></div>
     </div>
 
-    <div v-else-if="items.length" class="pet-grid">
-      <PetCard v-for="post in items" :key="post.id" :post="post" />
+    <div v-else-if="items.length" class="pet-grid stagger">
+      <!-- El escalonado se reinicia por página: `index % 8` evita que la fila 40
+           de una búsqueda larga espere segundos antes de aparecer. -->
+      <PetCard
+        v-for="(post, index) in items"
+        :key="post.id"
+        :post="post"
+        :style="{ '--i': index % 8 }"
+      />
     </div>
 
     <EmptyState
@@ -297,7 +301,6 @@ onMounted(load)
 .filters { margin-bottom: 20px; }
 .filters .field:last-of-type { margin-bottom: 0; }
 
-.advanced-toggle { padding-inline: 0; }
 .advanced { margin-top: 12px; border-top: 1px dashed var(--border); padding-top: 14px; }
 
 .results-head {

@@ -50,96 +50,204 @@ def placeholder_photo(texto: str, tipo: str) -> str:
     return "data:image/svg+xml;utf8," + quote(svg)
 
 
+# Guías de la plataforma.
+#
+# Sobre el tono: quien lee esto casi siempre está asustado, con culpa o con
+# prisa. Los textos hablan de frente, en segunda persona, y reconocen lo que la
+# persona está sintiendo antes de darle instrucciones. Sin emojis, sin signos de
+# admiración y sin frases de autoayuda: la calidez está en lo que se dice, no en
+# la decoración.
 ARTICULOS = [
     {
-        "title": "¿Qué hacer en las primeras 24 horas si perdiste a tu mascota?",
+        "title": "Las primeras 24 horas: qué hacer si tu mascota se perdió",
         "category": "consejo",
-        "excerpt": "Las primeras horas son decisivas. Estos pasos aumentan mucho las probabilidades de reencuentro.",
+        "excerpt": (
+            "El primer día es el que más pesa. Esto es lo que conviene hacer, en orden, "
+            "mientras el rastro todavía está fresco."
+        ),
         "content": (
-            "1. Recorre la zona llamando a tu mascota con voz tranquila; el miedo hace que se escondan cerca.\n\n"
-            "2. Publica de inmediato con una foto clara, la ciudad y el barrio donde se perdió.\n\n"
-            "3. Comparte el enlace por WhatsApp en los grupos de tu barrio, conjunto o edificio.\n\n"
-            "4. Pregunta en tiendas, veterinarias, panaderías y a las personas que trabajan en la calle: "
-            "suelen ver todo lo que pasa en el sector.\n\n"
-            "5. Deja en la puerta de tu casa algo con tu olor o su cobija: muchos animales regresan solos.\n\n"
-            "6. Revisa los albergues y las publicaciones de 'mascota encontrada' de tu ciudad todos los días."
+            "Lo primero: respira. La mayoría de los animales perdidos aparecen, y muchos lo hacen "
+            "cerca de casa. Vas a necesitar la cabeza fría para las próximas horas, así que "
+            "concéntrate en lo que sí puedes hacer ahora mismo.\n\n"
+            "Empieza por tu propia cuadra. Un animal asustado no corre lejos: se esconde. Revisa "
+            "debajo de los carros, detrás de las materas, en los antejardines y en cualquier hueco "
+            "donde quepa. Llámalo con la voz de todos los días, la que usas para darle comida. Si "
+            "gritas, el miedo lo hará quedarse quieto justo donde está.\n\n"
+            "Publica de una vez, aunque sientas que es pronto. Una foto clara, la ciudad y el "
+            "barrio bastan para empezar. Cada hora que pasa el círculo de búsqueda se hace más "
+            "grande, y mientras más ojos estén mirando, mejor.\n\n"
+            "Después mueve el enlace por donde de verdad circula la gente de tu zona: el grupo de "
+            "WhatsApp del conjunto, el del edificio, el de la cuadra. Ahí es donde alguien va a "
+            "reconocerlo.\n\n"
+            "Pregúntale a quienes se pasan el día en la calle. El portero, la señora de la tienda, "
+            "el de la panadería, los domiciliarios, quienes reciclan. Ven todo lo que pasa en el "
+            "sector y suelen acordarse de un animal que anda solo.\n\n"
+            "Deja algo tuyo en la puerta. Su cobija, su cama, unas medias que hayas usado. El olor "
+            "familiar orienta a muchos animales de vuelta a casa, sobre todo de noche.\n\n"
+            "Y revisa todos los días las publicaciones de mascota encontrada de tu ciudad, además "
+            "de los albergues y las veterinarias cercanas. Es frecuente que alguien ya la haya "
+            "recogido y esté buscándote a ti."
         ),
     },
     {
-        "title": "Encontraste una mascota: guía rápida para ayudarla",
+        "title": "Encontraste una mascota: cómo ayudarla a volver a casa",
         "category": "consejo",
-        "excerpt": "Antes de llevarla a casa, revisa estos puntos para encontrar a su familia más rápido.",
+        "excerpt": (
+            "Unos minutos bien invertidos al principio pueden ahorrar semanas de búsqueda "
+            "a la familia que la está esperando."
+        ),
         "content": (
-            "Revisa si tiene collar, placa o algún distintivo, y toma una foto clara de frente.\n\n"
-            "Lleva al animal a una veterinaria para verificar si tiene microchip; en muchos lugares es gratuito.\n\n"
-            "Publica en la plataforma como 'Mascota encontrada' indicando el sector donde la viste, "
-            "pero guarda un detalle que solo su familia conocería: sirve para confirmar quién es el dueño real.\n\n"
-            "No entregues la mascota sin verificar fotografías previas o documentos veterinarios."
+            "Gracias por detenerte. Mucha gente pasa de largo, y ese animal tiene ahora una "
+            "posibilidad real de volver a casa.\n\n"
+            "Antes de nada, revísale el cuello. Un collar, una placa, una manilla, cualquier cosa "
+            "con un número puede resolverlo todo en una llamada. Tómale también una foto de frente, "
+            "con buena luz y sin filtros.\n\n"
+            "Si puedes, pasa por una veterinaria y pide que le lean el microchip. La lectura es "
+            "rápida y en muchos sitios no cobran por hacerla. Es la forma más directa de dar con "
+            "su familia.\n\n"
+            "Cuando publiques, hazlo como mascota encontrada e indica el sector donde la viste. "
+            "Aquí va el consejo más importante de todos: guárdate un detalle que solo su familia "
+            "podría conocer. Una cicatriz, una mancha en un lugar poco visible, el nombre al que "
+            "responde. Ese dato es la manera de confirmar que quien reclama es quien dice ser.\n\n"
+            "No la entregues sin verificar. Pide fotos anteriores, el carné de vacunación o "
+            "cualquier documento de la veterinaria. Una familia de verdad tiene todo eso y lo "
+            "muestra sin problema."
         ),
     },
     {
-        "title": "Cómo tomar una buena foto para tu publicación",
+        "title": "Cómo tomar la foto que hará que alguien la reconozca",
         "category": "consejo",
-        "excerpt": "Una foto clara multiplica las posibilidades de que alguien reconozca a la mascota.",
+        "excerpt": (
+            "La foto es lo primero y a veces lo único que la gente mira. Vale la pena "
+            "dedicarle dos minutos."
+        ),
         "content": (
-            "Usa luz natural y toma la foto a la altura del animal.\n\n"
-            "Que se vea el cuerpo completo y, si es posible, una segunda foto de la cara.\n\n"
-            "Incluye una foto de las señales particulares: manchas, cicatrices, collar o placa.\n\n"
-            "Evita filtros: los colores reales ayudan a identificarla."
+            "Piensa en quién va a ver esa foto: alguien que baja rápido por una lista en el "
+            "celular, entre otras cosas que está haciendo. Tiene un segundo para reconocer al "
+            "animal. Ese segundo es todo lo que tienes.\n\n"
+            "Busca luz natural, cerca de una ventana o afuera, y agáchate hasta quedar a su "
+            "altura. Una foto tomada desde arriba deforma las proporciones y hace que un perro "
+            "mediano parezca pequeño.\n\n"
+            "Que en la primera foto se vea el cuerpo entero. Es lo que permite calcular el tamaño "
+            "real. Añade una segunda de la cara, de frente, y una tercera de lo que lo hace "
+            "distinto a cualquier otro: la mancha del lomo, la oreja caída, la cicatriz, el collar "
+            "que llevaba puesto.\n\n"
+            "No uses filtros. Un pelaje café que sale dorado en la pantalla hace que la gente "
+            "descarte al animal correcto sin darse cuenta."
         ),
     },
     {
-        "title": "Esterilización: por qué es la mejor forma de prevenir el abandono",
+        "title": "Esterilización: la decisión que evita el abandono antes de que ocurra",
         "category": "esterilizacion",
-        "excerpt": "Muchas alcaldías realizan jornadas gratuitas durante todo el año.",
+        "excerpt": (
+            "Casi todos los municipios del país hacen jornadas gratuitas. Así funcionan "
+            "y qué esperar después de la cirugía."
+        ),
         "content": (
-            "La esterilización previene camadas no deseadas, reduce el abandono y mejora la salud del animal.\n\n"
-            "Consulta la Secretaría de Salud o de Ambiente de tu municipio: las jornadas gratuitas se anuncian "
-            "por barrios y suelen requerir inscripción previa.\n\n"
-            "Después de la cirugía, mantén el reposo indicado y revisa la herida a diario."
+            "Detrás de cada animal en la calle hubo una camada que nadie planeó. Esterilizar es "
+            "la forma más eficaz de cortar esa cadena, y también le hace bien a tu mascota: "
+            "reduce el riesgo de varios tumores e infecciones, y disminuye las ganas de escaparse "
+            "a buscar pareja, que es una de las causas más comunes de que se pierdan.\n\n"
+            "La mayoría de las alcaldías organizan jornadas gratuitas durante todo el año. Se "
+            "anuncian por barrios y casi siempre piden inscripción previa, así que conviene estar "
+            "pendiente de la Secretaría de Salud o de Ambiente de tu municipio y de sus redes.\n\n"
+            "El día de la cirugía llévala en ayunas, según lo que te indiquen, y con transporte de "
+            "regreso resuelto. Es un procedimiento de rutina, pero va a salir adormilada.\n\n"
+            "Los días siguientes son los que importan. Reposo de verdad, nada de saltar ni correr, "
+            "el collar isabelino puesto aunque proteste, y revisar la herida a diario. Si notas "
+            "hinchazón, mal olor o secreción, vuelve a la veterinaria sin esperar."
         ),
     },
     {
-        "title": "Vacunación antirrábica: calendario y recomendaciones",
+        "title": "Vacuna antirrábica: cuándo ponerla y por qué no se aplaza",
         "category": "vacunacion",
-        "excerpt": "La vacuna antirrábica es gratuita en las jornadas oficiales de la mayoría de municipios.",
+        "excerpt": (
+            "Es gratuita en las jornadas oficiales de casi todos los municipios y protege "
+            "a tu mascota, a tu familia y a tu barrio."
+        ),
         "content": (
-            "Perros y gatos deben recibir la vacuna antirrábica desde los tres meses de edad y luego cada año.\n\n"
-            "Lleva el carné de vacunación a cada jornada.\n\n"
-            "Si tu mascota está enferma o preñada, consulta con un veterinario antes de vacunarla."
+            "La rabia sigue existiendo en Colombia y no tiene cura una vez aparecen los síntomas. "
+            "Por eso la vacuna es obligatoria, y por eso el Estado la pone gratis: no se trata solo "
+            "de tu mascota, sino de todos los que viven a su alrededor.\n\n"
+            "Perros y gatos reciben la primera dosis a partir de los tres meses y un refuerzo cada "
+            "año. Las jornadas oficiales se anuncian por barrios; también puedes preguntar en el "
+            "centro de salud más cercano por el calendario del año.\n\n"
+            "Lleva siempre el carné de vacunación. Es el documento que demuestra que tu mascota "
+            "está al día, y te lo van a pedir para viajar, para mudarte a un conjunto o si alguna "
+            "vez hay un incidente con una mordedura.\n\n"
+            "Si tu mascota está enferma, convaleciente o preñada, no la vacunes ese día. Consulta "
+            "primero con un veterinario y reprograma."
         ),
     },
     {
-        "title": "Ser hogar de paso: cómo funciona y qué se necesita",
+        "title": "Ser hogar de paso: lo que implica de verdad",
         "category": "hogar_de_paso",
-        "excerpt": "Un hogar temporal salva vidas mientras la mascota encuentra una familia definitiva.",
+        "excerpt": (
+            "Es el eslabón que más falta hace y el que menos gente conoce. "
+            "Esto es lo que se necesita para serlo."
+        ),
         "content": (
-            "Un hogar de paso recibe temporalmente a un animal rescatado mientras se recupera o encuentra adopción.\n\n"
-            "Normalmente la fundación cubre gastos veterinarios y el hogar aporta cuidado, alimentación y paseos.\n\n"
-            "Necesitas un espacio seguro, tiempo para el acompañamiento y acuerdo de todas las personas de la casa."
+            "Un hogar de paso recibe a un animal rescatado por un tiempo: mientras se recupera de "
+            "una cirugía, mientras baja el miedo, mientras aparece la familia definitiva. No es "
+            "adoptar, y ahí está justamente su valor. Una sola casa puede acompañar a muchos "
+            "animales a lo largo de un año.\n\n"
+            "En la mayoría de los casos la fundación cubre los gastos veterinarios y el alimento. "
+            "Lo que aportas tú es lo que no se puede comprar: un lugar tranquilo, rutina, paseos y "
+            "el trato paciente que necesita un animal que la pasó mal.\n\n"
+            "Antes de decir que sí, habla con todas las personas de la casa y piensa en los "
+            "animales que ya viven contigo. Un hogar de paso funciona cuando todos están de "
+            "acuerdo, no cuando uno solo se entusiasma.\n\n"
+            "Y sí, se encariña uno. Casi todo el mundo llora el día de la entrega. También casi "
+            "todo el mundo vuelve a recibir al siguiente, porque ver a ese animal entrar a su "
+            "nueva casa compensa el resto."
         ),
     },
     {
-        "title": "Adoptar con responsabilidad: preguntas antes de decidir",
+        "title": "Antes de adoptar: cinco preguntas que conviene responder con calma",
         "category": "bienestar_animal",
-        "excerpt": "Adoptar es un compromiso de 10 a 20 años. Estas preguntas ayudan a tomar una buena decisión.",
+        "excerpt": (
+            "Adoptar es un compromiso de diez a veinte años. Pensarlo bien no es "
+            "desconfianza, es responsabilidad."
+        ),
         "content": (
-            "¿Cuánto tiempo pasa sola la casa durante el día?\n\n"
-            "¿El presupuesto mensual alcanza para alimento, vacunas y una urgencia veterinaria?\n\n"
-            "¿El tamaño y la energía del animal encajan con tu vivienda y tu rutina?\n\n"
-            "¿Toda la familia está de acuerdo?\n\n"
-            "Si la respuesta a alguna es dudosa, ser hogar de paso o padrino puede ser una gran alternativa."
+            "Adoptar es de las decisiones más bonitas que se pueden tomar, y también una de las "
+            "que más se toman por impulso. Estas preguntas no existen para desanimarte, sino para "
+            "que el animal que llegue no tenga que volver a irse.\n\n"
+            "¿Cuántas horas al día va a quedarse solo? Un perro joven que pasa diez horas encerrado "
+            "no está mal cuidado por maldad, pero tampoco está bien.\n\n"
+            "¿El presupuesto del mes aguanta el alimento, las vacunas y, sobre todo, una urgencia? "
+            "Una cirugía imprevista puede costar varios salarios mínimos, y suele llegar sin avisar.\n\n"
+            "¿El tamaño y la energía encajan con tu casa y tu rutina? Un animal muy activo en un "
+            "apartamento pequeño con alguien que trabaja todo el día es una fuente de problemas "
+            "para ambos.\n\n"
+            "¿Están de acuerdo todas las personas con las que vives? Incluidas las que hoy dicen "
+            "que sí sin mucho entusiasmo.\n\n"
+            "¿Qué pasa si te mudas, viajas o cambia tu situación? Vale la pena tener una respuesta "
+            "antes, no después.\n\n"
+            "Si alguna te dejó dudando, no lo descartes todo: ser hogar de paso o apadrinar a un "
+            "animal en una fundación son formas reales de ayudar que piden menos de lo que tú "
+            "quizá no puedas dar hoy."
         ),
     },
     {
-        "title": "Directorio de albergues y fundaciones",
+        "title": "Albergues y fundaciones: cómo acercarse y cómo aparecer aquí",
         "category": "fundacion",
-        "excerpt": "Organizaciones que reciben reportes de animales en situación de calle.",
+        "excerpt": (
+            "Directorio en construcción de organizaciones que atienden animales en "
+            "situación de calle."
+        ),
         "content": (
-            "Este directorio se irá ampliando por ciudad. Si administras una fundación, un albergue o un "
-            "hogar de paso y quieres aparecer aquí, escríbenos desde la sección de contacto.\n\n"
-            "Antes de llevar un animal a un albergue, confirma disponibilidad: la mayoría trabaja al límite "
-            "de su capacidad y necesita coordinación previa."
+            "Este directorio va creciendo ciudad por ciudad. Si diriges una fundación, un albergue "
+            "o una red de hogares de paso y quieres aparecer, escríbenos desde la sección de "
+            "contacto y lo revisamos.\n\n"
+            "Si encontraste un animal y estás pensando en llevarlo a un albergue, llama antes. "
+            "Casi todos trabajan al límite de su capacidad y con presupuestos que no alcanzan; "
+            "llegar sin avisar los pone en una situación difícil y a veces significa que no puedan "
+            "recibirlo.\n\n"
+            "Vale la pena saber que hay otras formas de ayudar además de llevar animales: los "
+            "albergues siempre necesitan alimento, medicamentos, transporte a citas veterinarias y "
+            "personas que dediquen unas horas al aseo o a los paseos. Preguntar qué les hace falta "
+            "esta semana suele ser más útil que suponerlo."
         ),
     },
 ]
@@ -240,16 +348,45 @@ DEMO_POSTS = [
 ]
 
 
-def seed_articles(db) -> int:
+def seed_articles(db, *, refresh: bool = False) -> tuple[int, int]:
+    """Crea las guías que falten. Con `refresh`, además reescribe las existentes.
+
+    Sin `refresh` no se toca nada de lo que ya está en la base: si alguien editó
+    un texto desde el panel, un seed rutinario no debe pisárselo. `--refresh` es
+    la forma explícita de decir «quiero los textos nuevos».
+
+    El emparejamiento es por slug, que se deriva del título. Si el título cambió,
+    el artículo viejo se queda y se crea uno nuevo; por eso también se busca por
+    categoría cuando el slug no aparece.
+    """
     creados = 0
+    actualizados = 0
+
     for data in ARTICULOS:
         slug = slugify(data["title"], max_length=120)
-        if db.scalar(select(func.count()).select_from(Article).where(Article.slug == slug)):
+        existente = db.scalar(select(Article).where(Article.slug == slug))
+
+        if existente is None and refresh:
+            # El título pudo haber cambiado: se intenta emparejar por categoría.
+            existente = db.scalar(
+                select(Article).where(Article.category == data["category"]).order_by(Article.created_at)
+            )
+
+        if existente is None:
+            db.add(Article(slug=slug, **data))
+            creados += 1
             continue
-        db.add(Article(slug=slug, **data))
-        creados += 1
+
+        if not refresh:
+            continue
+
+        existente.slug = slug
+        for campo, valor in data.items():
+            setattr(existente, campo, valor)
+        actualizados += 1
+
     db.commit()
-    return creados
+    return creados, actualizados
 
 
 def seed_demo_posts(db) -> int:
@@ -320,6 +457,11 @@ def create_admin(db, email: str, password: str, name: str = "Administrador") -> 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Datos iniciales de Patitas Conectadas")
     parser.add_argument("--demo", action="store_true", help="Crear publicaciones de ejemplo")
+    parser.add_argument(
+        "--refresh",
+        action="store_true",
+        help="Reescribir el texto de las guías que ya existen (pisa ediciones hechas desde el panel)",
+    )
     parser.add_argument("--admin", help="Correo del administrador a crear/promover")
     parser.add_argument("--password", help="Contraseña del administrador")
     args = parser.parse_args()
@@ -328,7 +470,8 @@ def main() -> None:
     print("Tablas verificadas.")
 
     with SessionLocal() as db:
-        print(f"Artículos creados: {seed_articles(db)}")
+        creados, actualizados = seed_articles(db, refresh=args.refresh)
+        print(f"Guías creadas: {creados} · actualizadas: {actualizados}")
         if args.demo:
             print(f"Publicaciones de ejemplo creadas: {seed_demo_posts(db)}")
         if args.admin:

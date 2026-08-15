@@ -20,7 +20,7 @@ from ..config import settings
 from ..db import get_db
 from ..models import RESOLVED_STATUSES, Post
 from ..serializers import post_url
-from ..utils import species_label, status_label, type_label
+from ..utils import pet_gender, post_title, species_label, status_label, type_label
 
 router = APIRouter(tags=["metadatos"])
 
@@ -85,13 +85,13 @@ def share_preview(post_type: str, slug: str, db: Session = Depends(get_db)) -> H
             url=f"{settings.site_url}/mascotas/{post_type}/{slug}",
         )
 
-    nombre = post.pet_name or species_label(post.species)
+    genero = pet_gender(post.species, post.sex)
     emoji = {"perdida": "🔴", "encontrada": "🟢", "adopcion": "💙"}.get(post.type, "🐾")
-    title = f"{emoji} {nombre} — {type_label(post.type)} en {post.city}"
+    title = f"{emoji} {post_title(post)} — {type_label(post.type, genero)} en {post.city}"
 
     partes = [
         f"{species_label(post.species)}",
-        f"{status_label(post.status)}",
+        f"{status_label(post.status, genero)}",
         f"{post.city}{f', {post.region}' if post.region else ''}",
         _format_date(post.event_date),
     ]

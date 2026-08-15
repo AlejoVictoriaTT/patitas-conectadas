@@ -5,9 +5,10 @@ import ShareButtons from '@/components/ShareButtons.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import ReportDialog from '@/components/ReportDialog.vue'
 import EmptyState from '@/components/EmptyState.vue'
+import PhotoSlider from '@/components/PhotoSlider.vue'
 import { api } from '@/api/client'
 import { useAuthStore } from '@/stores/auth'
-import { formatDate, speciesEmoji, timeAgo, typeMeta } from '@/lib/format'
+import { eventDateLabel, formatDate, postTitle, speciesEmoji, timeAgo, typeMeta } from '@/lib/format'
 import { setPageDescription, setPageTitle } from '@/lib/head'
 
 const props = defineProps({
@@ -23,11 +24,15 @@ const loading = ref(true)
 const notFound = ref(false)
 const activePhoto = ref(0)
 const showReport = ref(false)
+const slider = ref(null)
+
+/** Las miniaturas mueven el carrusel; el carrusel actualiza `activePhoto`. */
+function verFoto(index) {
+  slider.value?.irA(index)
+}
 
 const meta = computed(() => (post.value ? typeMeta(post.value.type) : null))
-const title = computed(() =>
-  post.value ? post.value.pet_name || `${post.value.species_label} ${post.value.type_label.toLowerCase()}` : '',
-)
+const title = computed(() => postTitle(post.value))
 const shareUrl = computed(() => (post.value ? `${window.location.origin}${post.value.url}` : ''))
 const manageToken = computed(() => route.query.token || '')
 
@@ -92,14 +97,24 @@ watch(() => props.slug, load, { immediate: true })
     <article v-else class="detail">
       <!-- Galería -->
       <div class="gallery">
-        <div class="main-photo">
-          <img
-            v-if="post.photos.length"
-            :src="post.photos[activePhoto]?.url"
-            :alt="`Foto de ${title}`"
-            :class="{ resolved: post.is_resolved }"
-          />
-          <div v-else class="photo-fallback" aria-hidden="true">🐾</div>
+        <PhotoSlider
+          v-if="post.photos.length"
+          ref="slider"
+          :photos="post.photos"
+          :alt="`Foto de ${title}`"
+          :start-index="activePhoto"
+          :muted="post.is_resolved"
+          @update:index="activePhoto = $event"
+        >
+          <template #overlay>
+            <span class="type-tag" :class="`badge-${meta.color}`">
+              {{ meta.emoji }} {{ post.type_label }}
+            </span>
+          </template>
+        </PhotoSlider>
+
+        <div v-else class="main-photo">
+          <div class="photo-fallback" aria-hidden="true">🐾</div>
           <span class="type-tag" :class="`badge-${meta.color}`">{{ meta.emoji }} {{ post.type_label }}</span>
         </div>
 
@@ -110,10 +125,11 @@ watch(() => props.slug, load, { immediate: true })
             type="button"
             role="tab"
             :aria-selected="index === activePhoto"
+            :aria-label="`Ver foto ${index + 1}`"
             :class="{ 'is-active': index === activePhoto }"
-            @click="activePhoto = index"
+            @click="verFoto(index)"
           >
-            <img :src="photo.url" :alt="`Foto ${index + 1}`" />
+            <img :src="photo.url" :alt="`Foto ${index + 1}`" loading="lazy" />
           </button>
         </div>
       </div>
@@ -140,7 +156,7 @@ watch(() => props.slug, load, { immediate: true })
 
         <ul class="dates">
           <li>
-            <strong>{{ post.type === 'adopcion' ? 'Disponible desde:' : post.type === 'perdida' ? 'Se perdió el:' : 'Fue encontrada el:' }}</strong>
+            <strong>{{ eventDateLabel(post) }}</strong>
             {{ formatDate(post.event_date) }}
           </li>
           <li><strong>Publicado:</strong> {{ timeAgo(post.created_at) }}</li>
@@ -221,6 +237,7 @@ watch(() => props.slug, load, { immediate: true })
 <style scoped>
 .detail { display: grid; gap: 20px; }
 
+/* Solo se usa cuando la publicación no tiene ninguna foto. */
 .main-photo {
   position: relative;
   border-radius: var(--radius-lg);
@@ -228,8 +245,6 @@ watch(() => props.slug, load, { immediate: true })
   background: var(--surface-2);
   aspect-ratio: 4 / 3;
 }
-.main-photo img { width: 100%; height: 100%; object-fit: cover; }
-.main-photo img.resolved { filter: saturate(0.6); }
 
 .photo-fallback { display: grid; place-items: center; height: 100%; font-size: 3rem; opacity: 0.4; }
 
@@ -237,6 +252,7 @@ watch(() => props.slug, load, { immediate: true })
   position: absolute;
   top: 12px;
   left: 12px;
+  z-index: 2;
   padding: 5px 12px;
   border-radius: var(--radius-pill);
   font-weight: 700;
@@ -258,9 +274,25 @@ watch(() => props.slug, load, { immediate: true })
   background: none;
   cursor: pointer;
   aspect-ratio: 1;
+  opacity: 0.6;
+  transition:
+    opacity var(--dur) var(--ease-out),
+    border-color var(--dur) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
-.thumbs button.is-active { border-color: var(--brand); }
-.thumbs img { width: 100%; height: 100%; object-fit: cover; }
+.thumbs button:hover { opacity: 1; transform: translateY(-2px); }
+.thumbs button.is-active { border-color: var(--brand); opacity: 1; }
+
+/* `contain` en vez de `cover`: la miniatura muestra la foto completa encajada
+   en su cuadro, no un recorte del centro. Con `cover` una foto vertical se
+   quedaba en la franja central y no se reconocía qué mascota era. El fondo
+   rellena lo que sobra a los lados. */
+.thumbs img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: var(--surface-2);
+}
 
 .info { display: grid; gap: 14px; align-content: start; }
 .info h1 { margin: 0; }

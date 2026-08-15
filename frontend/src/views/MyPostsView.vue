@@ -4,7 +4,7 @@ import StatusBadge from '@/components/StatusBadge.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import { api } from '@/api/client'
 import { useUiStore } from '@/stores/ui'
-import { formatShortDate, typeMeta } from '@/lib/format'
+import { formatShortDate, postTitle, typeMeta } from '@/lib/format'
 import { setPageTitle } from '@/lib/head'
 
 const ui = useUiStore()
@@ -75,9 +75,9 @@ onMounted(async () => {
 
     <ul v-else-if="visibles.length" class="post-list">
       <li v-for="post in visibles" :key="post.id" class="panel post-row">
-        <img v-if="post.photo_url" :src="post.photo_url" :alt="`Foto de ${post.pet_name || post.species_label}`" />
+        <img v-if="post.photo_url" :src="post.photo_url" :alt="`Foto de ${postTitle(post)}`" />
         <div class="post-info">
-          <h3>{{ post.pet_name || post.species_label }}</h3>
+          <h3>{{ postTitle(post) }}</h3>
           <div class="row-tight">
             <StatusBadge :post="post" variant="type" />
             <StatusBadge :post="post" />

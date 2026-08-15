@@ -224,12 +224,17 @@ class PostCardOut(BaseModel):
     public_id: str
     slug: str
     url: str
+    # Título ya concordado en género («Perra perdida», «Gato encontrado») y el
+    # género con el que concuerdan las demás etiquetas: 'm' o 'f'.
+    title: str
+    gender: str
     type: PostTypeLiteral
     type_label: str
     status: str
     status_label: str
     species: str
     species_label: str
+    sex: str | None
     pet_name: str | None
     city: str
     region: str | None
@@ -242,7 +247,6 @@ class PostCardOut(BaseModel):
 
 class PostDetailOut(PostCardOut):
     breed: str | None
-    sex: str | None
     age: str | None
     color: str | None
     size: str | None
@@ -315,6 +319,7 @@ class ArticleOut(BaseModel):
     slug: str
     title: str
     category: str
+    category_label: str
     excerpt: str | None
     content: str
     image_url: str | None
@@ -322,6 +327,31 @@ class ArticleOut(BaseModel):
     contact_url: str | None
     is_published: bool
     published_at: datetime
+
+
+class NewsItemOut(BaseModel):
+    """Nota de un medio externo: titular, resumen corto y enlace a la fuente."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    title: str
+    summary: str | None
+    url: str
+    image_url: str | None
+    source: str
+    tone: str
+    is_pet_related: bool
+    cities: str | None
+    published_at: datetime
+
+
+class NewsListOut(BaseModel):
+    items: list[NewsItemOut]
+    total: int
+    page: int
+    page_size: int
+    pages: int
 
 
 class ArticleIn(BaseModel):
@@ -345,6 +375,15 @@ class ArticleIn(BaseModel):
 # ------------------------------------------------------------------ administración
 
 
+class VisitIn(BaseModel):
+    """Aviso de visita que manda el frontend en cada cambio de pantalla."""
+
+    # La ruta se acepta por compatibilidad pero no se guarda: el contador es
+    # solo un total diario, sin rastro de por dónde navegó cada persona.
+    path: Annotated[str, Field(max_length=200)] | None = None
+    new_session: bool = False
+
+
 class AdminStatsOut(BaseModel):
     total_posts: int
     active_posts: int
@@ -356,6 +395,11 @@ class AdminStatsOut(BaseModel):
     users: int
     posts_last_7_days: int
     top_cities: list[dict]
+    # Visitas: `visits` son las del sitio completo; `total_post_views` suma las
+    # aperturas de publicaciones, que se contaban desde antes.
+    visits: dict
+    total_post_views: int
+    most_viewed: list[dict]
 
 
 class AdminPostFlagIn(BaseModel):

@@ -28,7 +28,9 @@ function logout() {
       <nav class="desktop-nav" aria-label="Navegación principal">
         <router-link to="/buscar">Buscar mascotas</router-link>
         <router-link to="/adopciones">Adopciones</router-link>
-        <router-link to="/noticias">Noticias y ayuda</router-link>
+        <router-link to="/noticias">Noticias</router-link>
+        <router-link to="/guias">Guías</router-link>
+        <router-link to="/emergencia">Emergencia</router-link>
         <router-link v-if="auth.isAuthenticated" to="/mis-publicaciones">Mis publicaciones</router-link>
         <router-link v-if="auth.isAdmin" to="/admin">Panel</router-link>
       </nav>
@@ -184,17 +186,30 @@ function logout() {
 }
 
 @media (min-width: 768px) {
+  /*
+    Con seis enlaces (más los de sesión) la barra no cabe entre 768 y 1024px.
+    En vez de esconder secciones, el menú se desplaza en horizontal: todo sigue
+    siendo alcanzable y en pantallas grandes ni se nota que puede hacerlo.
+    `min-width: 0` es lo que permite que el flex encoja en vez de empujar.
+  */
   .desktop-nav {
     display: flex;
-    gap: 4px;
-    margin-left: 16px;
+    gap: 2px;
+    margin-left: 12px;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
+  .desktop-nav::-webkit-scrollbar { display: none; }
+
   .desktop-nav a {
-    padding: 8px 12px;
+    padding: 8px 10px;
     border-radius: var(--radius-pill);
     color: var(--text-soft);
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: 0.92rem;
+    white-space: nowrap;
   }
   .desktop-nav a:hover {
     background: var(--surface-2);
@@ -207,5 +222,11 @@ function logout() {
   }
   .publish-cta { display: inline-flex; }
   .brand-text { font-size: 1.05rem; }
+}
+
+@media (min-width: 1100px) {
+  /* Ya hay espacio de sobra: se recupera el respiro entre enlaces. */
+  .desktop-nav { gap: 4px; margin-left: 16px; }
+  .desktop-nav a { padding: 8px 12px; font-size: 0.95rem; }
 }
 </style>

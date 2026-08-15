@@ -5,6 +5,7 @@ import EmptyState from '@/components/EmptyState.vue'
 import { api } from '@/api/client'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
+import { postTitle } from '@/lib/format'
 import { setPageTitle } from '@/lib/head'
 
 const props = defineProps({
@@ -23,7 +24,7 @@ async function load() {
   loading.value = true
   try {
     post.value = await api.getByManageToken(props.token)
-    setPageTitle(`Administrar ${post.value.pet_name || post.value.species_label}`)
+    setPageTitle(`Administrar ${postTitle(post.value)}`)
   } catch (err) {
     error.value = err.message
   } finally {

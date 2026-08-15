@@ -8,7 +8,7 @@ import StatusBadge from '@/components/StatusBadge.vue'
 import { api } from '@/api/client'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
-import { formatDate, speciesEmoji, todayISO, typeMeta } from '@/lib/format'
+import { formatDate, postTitle, speciesEmoji, todayISO, typeMeta } from '@/lib/format'
 
 const route = useRoute()
 const auth = useAuthStore()
@@ -225,7 +225,7 @@ async function submit() {
       ui.rememberGuestPost({
         token: data.manage_token,
         url: data.post.url,
-        name: data.post.pet_name || data.post.species_label,
+        name: postTitle(data.post),
         type: data.post.type,
         created_at: new Date().toISOString(),
       })
@@ -265,7 +265,7 @@ function publishAnother() {
       <div class="preview-mini">
         <img v-if="result.post.photo_url" :src="result.post.photo_url" alt="Foto principal de la publicación" />
         <div>
-          <strong>{{ result.post.pet_name || result.post.species_label }}</strong>
+          <strong>{{ postTitle(result.post) }}</strong>
           <StatusBadge :post="result.post" />
           <p class="text-muted">📍 {{ result.post.city }}</p>
         </div>
@@ -275,7 +275,7 @@ function publishAnother() {
         <router-link class="btn btn-primary btn-lg btn-block" :to="result.post.url">Ver publicación</router-link>
         <ShareButtons
           :url="result.share_url"
-          :title="`${meta?.emoji} ${result.post.pet_name || result.post.species_label} — ${result.post.type_label} en ${result.post.city}`"
+          :title="`${meta?.emoji} ${postTitle(result.post)} — ${result.post.type_label} en ${result.post.city}`"
         />
       </div>
 

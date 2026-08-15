@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import PostManager from '@/components/PostManager.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import { api } from '@/api/client'
+import { postTitle } from '@/lib/format'
 import { setPageTitle } from '@/lib/head'
 
 const props = defineProps({
@@ -20,7 +21,7 @@ onMounted(async () => {
       error.value = 'No tienes permiso para administrar esta publicación.'
     } else {
       post.value = data
-      setPageTitle(`Editar ${data.pet_name || data.species_label}`)
+      setPageTitle(`Editar ${postTitle(data)}`)
     }
   } catch (err) {
     error.value = err.message

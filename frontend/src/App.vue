@@ -30,8 +30,15 @@ onMounted(async () => {
       Sin <transition> alrededor de router-view: una vista con más de un nodo raíz
       (por ejemplo un comentario suelto o un v-if/v-else) no se puede animar, y con
       mode="out-in" la salida nunca termina y la pantalla queda en blanco.
+
+      En su lugar la clave por ruta vuelve a montar este contenedor en cada
+      navegación, y la animación CSS `page-in` se dispara sola al montarse. Como
+      es una animación de entrada (no una salida que deba terminar), no hay forma
+      de que la pantalla se quede vacía.
     -->
-    <router-view />
+    <div :key="$route.path" class="route-view">
+      <router-view />
+    </div>
   </main>
 
   <AppFooter />
